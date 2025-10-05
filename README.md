@@ -4,7 +4,7 @@
 
 **Project Title**: Retail Sales Analysis  
 **Level**: Beginner  
-**Database**: `p1_retail_db`
+**Database**: `projet_p1.db`
 
 This project is designed to demonstrate SQL skills and techniques typically used by data analysts to explore, clean, and analyze retail sales data. The project involves setting up a retail sales database, performing exploratory data analysis (EDA), and answering specific business questions through SQL queries. This project is ideal for those who are starting their journey in data analysis and want to build a solid foundation in SQL.
 
@@ -19,7 +19,7 @@ This project is designed to demonstrate SQL skills and techniques typically used
 
 ### 1. Database Setup
 
-- **Database Creation**: The project starts by creating a database named `p1_retail_db`.
+- **Database Creation**: The project starts by creating a database named `projet_p1.db`.
 - **Table Creation**: A table named `retail_sales` is created to store the sales data. The table structure includes columns for transaction ID, sale date, sale time, customer ID, gender, age, product category, quantity sold, price per unit, cost of goods sold (COGS), and total sale amount.
 
 ```sql
@@ -79,15 +79,13 @@ WHERE sale_date = '2022-11-05';
 
 2. **Write a SQL query to retrieve all transactions where the category is 'Clothing' and the quantity sold is more than 4 in the month of Nov-2022**:
 ```sql
-SELECT 
-  *
+SELECT category, SUM(quantiy)
 FROM retail_sales
-WHERE 
-    category = 'Clothing'
-    AND 
-    TO_CHAR(sale_date, 'YYYY-MM') = '2022-11'
+WHERE category = "Clothing"
     AND
-    quantity >= 4
+    STRFTIME('%Y-%m', sale_date) = '2022-11' -- STRFTIME Extrait la date
+    AND
+    quantiy >= 4;
 ```
 
 3. **Write a SQL query to calculate the total sales (total_sale) for each category.**:
@@ -130,21 +128,22 @@ ORDER BY 1
 
 7. **Write a SQL query to calculate the average sale for each month. Find out best selling month in each year**:
 ```sql
-SELECT 
-       year,
-       month,
-    avg_sale
-FROM 
-(    
-SELECT 
-    EXTRACT(YEAR FROM sale_date) as year,
-    EXTRACT(MONTH FROM sale_date) as month,
-    AVG(total_sale) as avg_sale,
-    RANK() OVER(PARTITION BY EXTRACT(YEAR FROM sale_date) ORDER BY AVG(total_sale) DESC) as rank
-FROM retail_sales
-GROUP BY 1, 2
-) as t1
-WHERE rank = 1
+SELECT
+
+    Year, 
+    Month, 
+    avg_total
+FROM
+(
+    SELECT 
+    STRFTIME('%Y', sale_date) AS Year,
+    STRFTIME('%m', sale_date) AS Month,
+    AVG(total_sale) AS avg_total,
+    RANK() OVER(PARTITION BY STRFTIME('%Y', sale_date) ORDER BY AVG(total_sale) DESC) AS rank
+    FROM retail_sales
+    GROUP BY Month, Year
+) AS T1
+WHERE rank = 1;
 ```
 
 8. **Write a SQL query to find the top 5 customers based on the highest total sales **:
@@ -169,22 +168,19 @@ GROUP BY category
 
 10. **Write a SQL query to create each shift and number of orders (Example Morning <12, Afternoon Between 12 & 17, Evening >17)**:
 ```sql
-WITH hourly_sale
-AS
-(
-SELECT *,
-    CASE
-        WHEN EXTRACT(HOUR FROM sale_time) < 12 THEN 'Morning'
-        WHEN EXTRACT(HOUR FROM sale_time) BETWEEN 12 AND 17 THEN 'Afternoon'
-        ELSE 'Evening'
-    END as shift
-FROM retail_sales
+WITH hourly_sale AS (
+    SELECT *,
+        CASE
+            WHEN CAST(STRFTIME('%H', sale_time) AS INTEGER) < 12 THEN 'Morning'
+            WHEN CAST(STRFTIME('%H', sale_time) AS INTEGER) BETWEEN 12 AND 17 THEN 'Afternoon'
+            ELSE 'Evening'
+        END AS shift
+    FROM retail_sales
 )
-SELECT 
-    shift,
-    COUNT(*) as total_orders    
+SELECT shift, COUNT(*) AS total
 FROM hourly_sale
-GROUP BY shift
+GROUP BY shift;
+
 ```
 
 ## Findings
@@ -214,12 +210,6 @@ This project serves as a comprehensive introduction to SQL for data analysts, co
 ## Author - Zero Analyst
 
 This project is part of my portfolio, showcasing the SQL skills essential for data analyst roles. If you have any questions, feedback, or would like to collaborate, feel free to get in touch!
-
-### Stay Updated and Join the Community
-
-For more content on SQL, data analysis, and other data-related topics, make sure to follow me on social media and join our community:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
 - **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
 - **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
 - **Discord**: [Join our community to learn and grow together](https://discord.gg/36h5f2Z5PK)
